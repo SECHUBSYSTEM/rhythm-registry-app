@@ -21,7 +21,10 @@ import type { CreatorApplication, ApplicationStatus } from "@/types";
 type TabFilter = "pending" | "approved" | "rejected" | "all";
 
 function fetchApplications(): Promise<CreatorApplication[]> {
-  return api.get<CreatorApplication[]>("/api/admin/creator-applications").then((r) => r.data ?? []);
+  return api
+    .get<CreatorApplication[]>("/api/admin/creator-applications")
+    .then((r) => (Array.isArray(r.data) ? r.data : []))
+    .catch(() => []);
 }
 
 export default function AdminPage() {
@@ -77,10 +80,11 @@ export default function AdminPage() {
 
   const filteredApps = applications.filter((app) => {
     const matchesTab = activeTab === "all" || app.status === activeTab;
+    const name = (app.userName ?? "").toLowerCase();
+    const email = (app.userEmail ?? "").toLowerCase();
+    const q = searchQuery.toLowerCase();
     const matchesSearch =
-      !searchQuery ||
-      app.userName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      app.userEmail.toLowerCase().includes(searchQuery.toLowerCase());
+      !searchQuery || name.includes(q) || email.includes(q);
     return matchesTab && matchesSearch;
   });
 
@@ -237,32 +241,32 @@ export default function AdminPage() {
                       background: "var(--bg-highlight)",
                       color: "var(--text-primary)",
                     }}>
-                    {app.userName[0].toUpperCase()}
+                    {(app.userName ?? "?")[0]?.toUpperCase() ?? "?"}
                   </div>
                   <div>
                     <p
                       className="text-sm font-semibold"
                       style={{ color: "var(--text-primary)" }}>
-                      {app.userName}
+                      {app.userName ?? "—"}
                     </p>
                     <p
                       className="text-xs flex items-center gap-1"
                       style={{ color: "var(--text-muted)" }}>
                       <Mail size={11} />
-                      {app.userEmail}
+                      {app.userEmail ?? "—"}
                     </p>
                   </div>
                 </div>
 
                 {/* Status badge */}
-                <StatusBadge status={app.status} />
+                <StatusBadge status={app.status ?? "pending"} />
               </div>
 
               {/* Bio */}
               <p
                 className="text-sm leading-relaxed mb-3"
                 style={{ color: "var(--text-secondary)" }}>
-                {app.bio}
+                {app.bio ?? "—"}
               </p>
 
               {/* Meta row */}
@@ -398,7 +402,11 @@ export default function AdminPage() {
 }
 
 function StatusBadge({ status }: { status: ApplicationStatus }) {
-  const config = {
+  const safeStatus = status ?? "pending";
+  const config: Record<
+    ApplicationStatus,
+    { icon: React.ReactNode; className: string; label: string }
+  > = {
     pending: {
       icon: <Clock size={10} />,
       className: "badge-warning",
@@ -416,7 +424,7 @@ function StatusBadge({ status }: { status: ApplicationStatus }) {
     },
   };
 
-  const c = config[status];
+  const c = config[safeStatus] ?? config.pending;
   return (
     <span className={`badge ${c.className}`}>
       {c.icon}

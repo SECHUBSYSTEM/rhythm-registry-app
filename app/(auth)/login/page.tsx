@@ -111,6 +111,18 @@ function LoginForm() {
         />
       </div>
 
+      {/* Success message after password reset */}
+      {searchParams.get("reset") === "1" && (
+        <div
+          className="p-3 rounded-lg text-sm mb-4"
+          style={{
+            background: "rgba(29, 185, 84, 0.1)",
+            color: "var(--success)",
+          }}>
+          Password updated. Sign in with your new password.
+        </div>
+      )}
+
       {/* Error */}
       {error && (
         <div
@@ -156,16 +168,15 @@ function LoginForm() {
               style={{ color: "var(--text-secondary)" }}>
               Password
             </label>
-            <button
-              type="button"
+            <Link
+              href="/forgot-password"
               className="text-xs font-medium"
               style={{
                 color: "var(--rose-light)",
-                background: "none",
-                border: "none",
+                textDecoration: "none",
               }}>
               Forgot password?
-            </button>
+            </Link>
           </div>
           <div className="relative">
             <Lock
