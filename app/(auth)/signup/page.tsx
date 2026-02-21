@@ -25,6 +25,11 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
 
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError("Name is required.");
+      return;
+    }
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
       return;
@@ -36,7 +41,7 @@ export default function SignupPage() {
 
     setIsLoading(true);
     try {
-      const result = await signup(name, email, password);
+      const result = await signup(trimmedName, email, password);
       if (result.needsEmailVerification) {
         setVerificationEmail(result.email ?? email);
         setShowEmailVerificationMessage(true);

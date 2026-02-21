@@ -143,11 +143,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       if (data.user) {
-        if (name) {
+        const displayName = typeof name === "string" ? name.trim() : "";
+        if (displayName) {
           await supabase
             .from("profiles")
             .update({
-              display_name: name,
+              display_name: displayName,
               updated_at: new Date().toISOString(),
             })
             .eq("id", data.user.id);
@@ -159,7 +160,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           );
           setUser(
             profile
-              ? { ...profile, displayName: name || profile.displayName }
+              ? {
+                  ...profile,
+                  displayName:
+                    displayName || profile.displayName || undefined,
+                }
               : null,
           );
           setIsLoading(false);

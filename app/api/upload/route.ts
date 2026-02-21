@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { mapDbTrackToTrack, type DbTrackRow } from "@/lib/api-mappers";
+import { parseBuffer } from "music-metadata";
 
 const MAX_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB
 const ALLOWED_TYPES = [
@@ -71,6 +72,20 @@ export async function POST(request: NextRequest) {
     const ext = file.name.replace(/^.*\./, "").toLowerCase() || "mp3";
     const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
 
+    let durationSeconds: number | null = null;
+    try {
+      const buffer = await file.arrayBuffer();
+      const metadata = await parseBuffer(new Uint8Array(buffer));
+      if (
+        metadata.format.duration != null &&
+        Number.isFinite(metadata.format.duration)
+      ) {
+        durationSeconds = Math.round(metadata.format.duration);
+      }
+    } catch (metaErr) {
+      console.warn("[api/upload] Could not extract duration:", metaErr);
+    }
+
     const { error: uploadError } = await supabase.storage
       .from("audio-files")
       .upload(path, file, {
@@ -95,7 +110,7 @@ export async function POST(request: NextRequest) {
         file_path: path,
         file_size: file.size,
         format: ext,
-        duration: null,
+        duration: durationSeconds,
         is_public: true,
       })
       .select()
@@ -110,7 +125,8 @@ export async function POST(request: NextRequest) {
     }
 
     const creatorName =
-      (profile.display_name as string) ?? "Unknown";
+      (profile.display_name as string)?.trim() ||
+      (user.email ?? "Creator");
     const track = mapDbTrackToTrack(row as DbTrackRow, creatorName);
 
     return NextResponse.json(track, { status: 201 });

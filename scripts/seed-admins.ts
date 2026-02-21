@@ -23,10 +23,13 @@ if (!email1 || !email2) {
   process.exit(1);
 }
 
-const emails = [email1, email2].filter(Boolean);
+// Narrowed after guards above (process.exit ensures we never reach here if missing)
+const supabaseUrl = url as string;
+const key = serviceRoleKey as string;
+const emails = [email1, email2].filter(Boolean) as string[];
 
 async function main() {
-  const supabase = createClient(url, serviceRoleKey, {
+  const supabase = createClient(supabaseUrl, key, {
     auth: { persistSession: false },
   });
 

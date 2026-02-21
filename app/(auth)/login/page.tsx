@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { createClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
@@ -225,5 +225,37 @@ export default function LoginPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+function LoginFallback() {
+  return (
+    <div className="animate-fade-in-up">
+      <div
+        className="h-9 w-48 rounded mb-2"
+        style={{ background: "var(--bg-highlight)" }}
+      />
+      <div
+        className="h-4 w-64 rounded mb-8"
+        style={{ background: "var(--bg-highlight)" }}
+      />
+      <div className="flex justify-center py-12">
+        <span
+          className="animate-spin inline-block w-8 h-8 rounded-full border-2"
+          style={{
+            borderColor: "var(--border-subtle)",
+            borderTopColor: "var(--rose-primary)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginFallback />}>
+      <LoginForm />
+    </Suspense>
   );
 }

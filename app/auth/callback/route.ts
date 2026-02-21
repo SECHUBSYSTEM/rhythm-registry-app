@@ -8,7 +8,30 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient();
-    await supabase.auth.exchangeCodeForSession(code);
+    const { data } = await supabase.auth.exchangeCodeForSession(code);
+    // After email verification: ensure profile has display_name from signup metadata
+    if (data?.user) {
+      const displayName =
+        (data.user.user_metadata?.display_name as string)?.trim();
+      if (displayName) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("display_name")
+          .eq("id", data.user.id)
+          .single();
+        const current = (profile as { display_name?: string | null } | null)
+          ?.display_name;
+        if (current == null || current === "") {
+          await supabase
+            .from("profiles")
+            .update({
+              display_name: displayName,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", data.user.id);
+        }
+      }
+    }
   }
 
   const origin = request.nextUrl.origin;

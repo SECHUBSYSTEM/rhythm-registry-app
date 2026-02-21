@@ -18,6 +18,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .single();
 
     if (trackError || !track) {
+      console.error("[api/stream] track fetch error:", trackError?.message ?? "not found", { id });
       return NextResponse.json({ error: "Track not found" }, { status: 404 });
     }
 

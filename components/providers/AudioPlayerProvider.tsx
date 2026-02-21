@@ -9,6 +9,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import { toast } from "react-toastify";
 import api from "@/lib/api";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useOfflineTrack } from "@/components/providers/OfflineProvider";
@@ -77,17 +78,44 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
         if (objectUrlRef.current) URL.revokeObjectURL(objectUrlRef.current);
         objectUrlRef.current = url;
         audioRef.current.src = url;
-        if (state.isPlaying) audioRef.current.play().catch(() => {});
+        if (state.isPlaying) {
+          audioRef.current.play().catch((err) => {
+            console.error("[AudioPlayer] Offline play failed:", err);
+            toast.error("Playback failed. Try again.");
+            setState((p) => ({ ...p, isPlaying: false }));
+          });
+        }
       });
     } else {
       api
         .get<{ url: string }>(`/api/stream/${trackId}`)
         .then((res) => {
           if (cancelled || !audioRef.current) return;
-          audioRef.current.src = res.data.url;
-          if (state.isPlaying) audioRef.current.play().catch(() => {});
+          const url = res.data?.url;
+          if (!url) {
+            console.error("[AudioPlayer] Stream API returned no url");
+            toast.error("Could not load audio.");
+            return;
+          }
+          audioRef.current.src = url;
+          if (state.isPlaying) {
+            audioRef.current.play().catch((err) => {
+              console.error("[AudioPlayer] Play failed:", err);
+              toast.error("Playback failed. Check the track or try again.");
+              setState((p) => ({ ...p, isPlaying: false }));
+            });
+          }
         })
-        .catch(() => {});
+        .catch((err) => {
+          if (cancelled) return;
+          const msg =
+            err?.response?.data?.error ??
+            err?.message ??
+            "Could not load stream";
+          console.error("[AudioPlayer] Stream request failed:", err?.response?.status, msg, err);
+          toast.error("Could not load audio. Try again.");
+          setState((p) => ({ ...p, isPlaying: false }));
+        });
     }
 
     return () => {
@@ -102,7 +130,11 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     const el = audioRef.current;
     if (!el || !el.src) return;
     if (state.isPlaying) {
-      el.play().catch(() => setState((p) => ({ ...p, isPlaying: false })));
+      el.play().catch((err) => {
+        console.error("[AudioPlayer] Sync play failed:", err);
+        toast.error("Playback failed.");
+        setState((p) => ({ ...p, isPlaying: false }));
+      });
     } else {
       el.pause();
     }
@@ -122,6 +154,17 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const el = audioRef.current;
     if (!el) return;
+    const onLoadedMetadata = () => {
+      const d = el.duration;
+      if (Number.isFinite(d) && d > 0) {
+        durationRef.current = d;
+        setState((p) =>
+          p.currentTrack && (p.currentTrack.duration == null || p.currentTrack.duration === 0)
+            ? { ...p, currentTrack: { ...p.currentTrack, duration: d } }
+            : p
+        );
+      }
+    };
     const onTimeUpdate = () => {
       const duration = durationRef.current ?? el.duration;
       if (Number.isFinite(duration) && duration > 0) {
@@ -132,12 +175,20 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     };
     const onPlay = () => setState((p) => ({ ...p, isPlaying: true }));
     const onPause = () => setState((p) => ({ ...p, isPlaying: false }));
-    const onEnded = () => setState((p) => ({ ...p, isPlaying: false, progress: 0, currentTime: 0 }));
+    const onEnded = () =>
+      setState((p) => ({
+        ...p,
+        isPlaying: false,
+        progress: 0,
+        currentTime: 0,
+      }));
+    el.addEventListener("loadedmetadata", onLoadedMetadata);
     el.addEventListener("timeupdate", onTimeUpdate);
     el.addEventListener("play", onPlay);
     el.addEventListener("pause", onPause);
     el.addEventListener("ended", onEnded);
     return () => {
+      el.removeEventListener("loadedmetadata", onLoadedMetadata);
       el.removeEventListener("timeupdate", onTimeUpdate);
       el.removeEventListener("play", onPlay);
       el.removeEventListener("pause", onPause);
@@ -171,19 +222,23 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     );
   }, []);
 
-  const seek = useCallback((progress: number) => {
-    const el = audioRef.current;
-    const duration = state.currentTrack?.duration;
-    if (el && duration != null && Number.isFinite(duration) && duration > 0) {
-      el.currentTime = (progress / 100) * duration;
-    }
-    setState((prev) => {
-      if (!prev.currentTrack) return prev;
-      const d = prev.currentTrack.duration;
-      const currentTime = d != null && Number.isFinite(d) ? (progress / 100) * d : 0;
-      return { ...prev, progress, currentTime };
-    });
-  }, [state.currentTrack?.duration]);
+  const seek = useCallback(
+    (progress: number) => {
+      const el = audioRef.current;
+      const duration = state.currentTrack?.duration;
+      if (el && duration != null && Number.isFinite(duration) && duration > 0) {
+        el.currentTime = (progress / 100) * duration;
+      }
+      setState((prev) => {
+        if (!prev.currentTrack) return prev;
+        const d = prev.currentTrack.duration;
+        const currentTime =
+          d != null && Number.isFinite(d) ? (progress / 100) * d : 0;
+        return { ...prev, progress, currentTime };
+      });
+    },
+    [state.currentTrack?.duration],
+  );
 
   const setVolume = useCallback((volume: number) => {
     setState((prev) => ({
