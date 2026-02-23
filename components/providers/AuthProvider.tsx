@@ -52,6 +52,17 @@ function mapRowToProfile(
   };
 }
 
+function profileFromSession(session: { user: { id: string; email?: string | null; user_metadata?: { display_name?: string } } }): Profile {
+  const u = session.user;
+  return {
+    id: u.id,
+    email: u.email ?? "",
+    displayName: (u.user_metadata?.display_name as string | undefined) ?? undefined,
+    role: "listener",
+    createdAt: new Date(0).toISOString(),
+  };
+}
+
 // ── Provider ──────────────────────────────────────────────────────────────
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -62,19 +73,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [supabase] = useState(() => createClient());
 
   const fetchProfile = useCallback(
-    async (userId: string, email: string) => {
+    async (
+      userId: string,
+      email: string,
+    ): Promise<{ profile: Profile | null; error: { code?: string } | null }> => {
       const { data, error } = await supabase
         .from("profiles")
         .select("id, display_name, role, created_at")
         .eq("id", userId)
         .single();
-      if (error || !data) return null;
-      return mapRowToProfile(
-        { ...data, display_name: data.display_name ?? null },
-        email,
-      );
+      if (error || !data) {
+        return {
+          profile: null,
+          error: error ? { code: (error as { code?: string }).code } : null,
+        };
+      }
+      return {
+        profile: mapRowToProfile(
+          { ...data, display_name: data.display_name ?? null },
+          email,
+        ),
+        error: null,
+      };
     },
     [supabase],
+  );
+
+  const isProfileGoneError = useCallback(
+    (err: { code?: string } | null) => {
+      if (!err) return false;
+      return (
+        err.code === "PGRST116" ||
+        err.code === "406" ||
+        (err as { status?: number }).status === 406
+      );
+    },
+    [],
   );
 
   const router = useRouter();
@@ -89,17 +123,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
         return;
       }
-      const profile = await fetchProfile(
+      const { profile, error } = await fetchProfile(
         session.user.id,
         session.user.email ?? "",
       );
-      setUser(profile ?? null);
+      if (profile) {
+        const metaName = (
+          session.user.user_metadata?.display_name as string | undefined
+        )?.trim();
+        const missingDisplayName =
+          !profile.displayName || profile.displayName.trim() === "";
+        if (missingDisplayName && metaName) {
+          await supabase
+            .from("profiles")
+            .update({
+              display_name: metaName,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", session.user.id);
+          setUser({ ...profile, displayName: metaName });
+        } else {
+          setUser(profile);
+        }
+      } else if (isProfileGoneError(error)) {
+        await supabase.auth.signOut();
+        setUser(null);
+        setRoleOverride(null);
+        router.replace("/login");
+      } else {
+        // Network or other error: keep user from session so we don't appear logged out when offline
+        setUser(profileFromSession(session));
+      }
       setRoleOverride(null);
       setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase.auth, fetchProfile]);
+  }, [supabase, fetchProfile, isProfileGoneError, router]);
 
   const login = useCallback(
     async (email: string, password: string) => {
@@ -113,7 +173,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
       if (data.user) {
-        const profile = await fetchProfile(data.user.id, data.user.email ?? "");
+        const { profile } = await fetchProfile(
+          data.user.id,
+          data.user.email ?? "",
+        );
         setUser(profile ?? null);
       }
       setIsLoading(false);
@@ -154,7 +217,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .eq("id", data.user.id);
         }
         if (data.session) {
-          const profile = await fetchProfile(
+          const { profile } = await fetchProfile(
             data.user.id,
             data.user.email ?? "",
           );

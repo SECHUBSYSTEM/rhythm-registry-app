@@ -47,12 +47,16 @@ export async function GET(request: NextRequest) {
       .in("id", creatorIds);
 
     const nameByCreatorId: Record<string, string> = {};
+    for (const id of creatorIds) {
+      nameByCreatorId[id] = "Creator";
+    }
     for (const p of profiles ?? []) {
-      nameByCreatorId[p.id] = p.display_name ?? "Unknown";
+      const display = (p.display_name as string | null)?.trim();
+      nameByCreatorId[p.id] = display || "Creator";
     }
 
     const tracks = trackRows.map((row) =>
-      mapDbTrackToTrack(row, nameByCreatorId[row.creator_id] ?? "Unknown")
+      mapDbTrackToTrack(row, nameByCreatorId[row.creator_id] ?? "Creator")
     );
 
     return NextResponse.json(tracks);

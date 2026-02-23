@@ -1,0 +1,29 @@
+﻿
+> rhythm-registry-app@0.1.0 lint C:\Users\PROJECT\rhythm-registry-app
+> eslint
+
+
+C:\Users\PROJECT\rhythm-registry-app\components\layout\OfflineBanner.tsx
+  17:7  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\PROJECT\rhythm-registry-app\components\layout\OfflineBanner.tsx:17:7
+  15 |     } else if (isOnline && wasOffline.current) {
+  16 |       // Transition from offline to online
+> 17 |       setShowBackOnline(true);
+     |       ^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  18 |       const timer = setTimeout(() => {
+  19 |         setShowBackOnline(false);
+  20 |         wasOffline.current = false;  react-hooks/set-state-in-effect
+
+C:\Users\PROJECT\rhythm-registry-app\components\providers\AuthProvider.tsx
+  150:6  warning  React Hook useEffect has a missing dependency: 'supabase'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+Ô£û 2 problems (1 error, 1 warning)
+
+ÔÇëELIFECYCLEÔÇë Command failed with exit code 1.

@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import TrackList from "@/components/tracks/TrackList";
-import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import api from "@/lib/api";
 import type { Track } from "@/types";
 import { Sparkles, TrendingUp, Clock } from "lucide-react";
@@ -33,14 +32,6 @@ export default function DashboardPage() {
     };
   }, []);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <LoadingSpinner size="lg" label="Loading tracks..." />
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4">
@@ -50,9 +41,9 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8 md:space-y-10 animate-fade-in">
+    <div className="w-full min-w-0 space-y-8 md:space-y-10 animate-fade-in">
       {/* Header */}
-      <section>
+      <section className="w-full min-w-0">
         <h1
           className="text-2xl md:text-3xl font-bold mb-1"
           style={{ fontFamily: "var(--font-outfit)" }}>
@@ -67,7 +58,7 @@ export default function DashboardPage() {
       </section>
 
       {/* Recently Played – horizontal scroll */}
-      <section>
+      <section className="w-full min-w-0">
         <div className="flex items-center gap-2 mb-4">
           <Clock size={18} style={{ color: "var(--rose-light)" }} />
           <h2
@@ -79,12 +70,13 @@ export default function DashboardPage() {
         <TrackList
           tracks={tracks.slice(0, 5)}
           variant="scroll"
+          isLoading={loading}
           emptyMessage="Nothing played yet — start exploring!"
         />
       </section>
 
       {/* Trending Now – grid */}
-      <section>
+      <section className="w-full min-w-0">
         <div className="flex items-center gap-2 mb-4">
           <TrendingUp size={18} style={{ color: "var(--rose-light)" }} />
           <h2
@@ -93,11 +85,15 @@ export default function DashboardPage() {
             Trending Now
           </h2>
         </div>
-        <TrackList tracks={tracks.slice(0, 4)} variant="grid" />
+        <TrackList
+          tracks={tracks.slice(0, 4)}
+          variant="grid"
+          isLoading={loading}
+        />
       </section>
 
       {/* New Releases – grid */}
-      <section>
+      <section className="w-full min-w-0">
         <div className="flex items-center gap-2 mb-4">
           <Sparkles size={18} style={{ color: "var(--rose-light)" }} />
           <h2
@@ -106,7 +102,11 @@ export default function DashboardPage() {
             New Releases
           </h2>
         </div>
-        <TrackList tracks={tracks.slice(3)} variant="grid" />
+        <TrackList
+          tracks={tracks.slice(3)}
+          variant="grid"
+          isLoading={loading}
+        />
       </section>
     </div>
   );

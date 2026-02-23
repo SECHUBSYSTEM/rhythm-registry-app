@@ -36,9 +36,9 @@ export default function LibraryPage() {
   }));
 
   return (
-    <div className="animate-fade-in">
+    <div className="w-full min-w-0 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
+      <div className="flex items-center gap-3 mb-6 min-w-0">
         <div
           className="w-12 h-12 rounded-xl flex items-center justify-center"
           style={{
@@ -61,7 +61,7 @@ export default function LibraryPage() {
 
       {/* Tabs */}
       <div
-        className="flex gap-2 mb-6 p-1 rounded-xl w-fit"
+        className="flex flex-wrap gap-2 mb-6 p-1 rounded-xl w-full min-w-0 sm:w-fit"
         style={{ background: "var(--bg-elevated)" }}>
         <button
           onClick={() => setActiveTab("all")}
@@ -97,6 +97,7 @@ export default function LibraryPage() {
       </div>
 
       {/* Content */}
+      <div className="w-full min-w-0">
       {activeTab === "all" ? (
         loading ? (
           <div className="flex justify-center py-8">
@@ -128,7 +129,7 @@ export default function LibraryPage() {
               </p>
             </div>
           ) : (
-            <div className="space-y-2 stagger-children">
+            <div className="w-full min-w-0 space-y-2 stagger-children">
               {offlineTracks.map((track) => (
                 <div
                   key={track.id}

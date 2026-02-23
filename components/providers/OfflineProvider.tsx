@@ -8,8 +8,8 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
-import { openDB } from "idb";
 import api from "@/lib/api";
+import { getOfflineDB, TRACKS_STORE } from "@/lib/offline-db";
 import {
   getDeviceFingerprint,
   hashFingerprintForServer,
@@ -25,9 +25,6 @@ import {
 import { useAuth } from "@/components/providers/AuthProvider";
 import type { Track } from "@/types";
 
-const DB_NAME = "rhythm-registry-offline";
-const STORE = "tracks";
-const DB_VERSION = 1;
 
 interface OfflineRecord {
   trackId: string;
@@ -55,16 +52,6 @@ interface OfflineContextType {
 
 const OfflineContext = createContext<OfflineContextType | undefined>(undefined);
 
-async function getDB() {
-  return openDB(DB_NAME, DB_VERSION, {
-    upgrade(db) {
-      if (!db.objectStoreNames.contains(STORE)) {
-        db.createObjectStore(STORE, { keyPath: "trackId" });
-      }
-    },
-  });
-}
-
 export function OfflineProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const [offlineTracks, setOfflineTracks] = useState<OfflineTrack[]>([]);
@@ -72,9 +59,9 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
   const [downloadProgress, setDownloadProgress] = useState(0);
 
   const loadOfflineTracks = useCallback(async () => {
-    const db = await getDB();
-    const tx = db.transaction(STORE, "readonly");
-    const store = tx.objectStore(STORE);
+    const db = await getOfflineDB();
+    const tx = db.transaction(TRACKS_STORE, "readonly");
+    const store = tx.objectStore(TRACKS_STORE);
     const all = await store.getAll();
     await tx.done;
     const list: OfflineTrack[] = (all as OfflineRecord[]).map((r) => ({
@@ -128,8 +115,8 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
           downloadedAt: new Date().toISOString(),
         };
 
-        const db = await getDB();
-        await db.put(STORE, record);
+        const db = await getOfflineDB();
+        await db.put(TRACKS_STORE, record);
         await loadOfflineTracks();
 
         await api.post("/api/offline/register", {
@@ -147,8 +134,8 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
   );
 
   const removeOfflineTrack = useCallback(async (trackId: string) => {
-    const db = await getDB();
-    await db.delete(STORE, trackId);
+    const db = await getOfflineDB();
+    await db.delete(TRACKS_STORE, trackId);
     await loadOfflineTracks();
   }, [loadOfflineTracks]);
 
@@ -160,15 +147,20 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
   const getPlayableUrl = useCallback(
     async (trackId: string, userId: string): Promise<string | null> => {
       const fingerprint = getDeviceFingerprint();
-      const hash = await hashFingerprintForServer(fingerprint);
-      const { data } = await api.get<{ allowed: boolean }>(
-        "/api/offline/validate",
-        { params: { trackId, deviceFingerprintHash: hash } }
-      );
-      if (!data?.allowed) return null;
+      const isOffline =
+        typeof navigator !== "undefined" && !navigator.onLine;
 
-      const db = await getDB();
-      const record = await db.get(STORE, trackId) as OfflineRecord | undefined;
+      if (!isOffline) {
+        const hash = await hashFingerprintForServer(fingerprint);
+        const { data } = await api.get<{ allowed: boolean }>(
+          "/api/offline/validate",
+          { params: { trackId, deviceFingerprintHash: hash } }
+        );
+        if (!data?.allowed) return null;
+      }
+
+      const db = await getOfflineDB();
+      const record = (await db.get(TRACKS_STORE, trackId)) as OfflineRecord | undefined;
       if (!record) return null;
 
       const deviceKey = await deriveDeviceKey(userId, fingerprint);

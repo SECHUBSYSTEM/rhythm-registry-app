@@ -40,7 +40,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const formData = await request.formData();
+    let formData: FormData;
+    try {
+      formData = await request.formData();
+    } catch (e) {
+      console.warn("[api/upload] FormData parse failed (body may exceed limit):", e);
+      return NextResponse.json(
+        {
+          error:
+            "Request body too large or invalid. Max upload size is 200 MB. Try a smaller file.",
+        },
+        { status: 413 }
+      );
+    }
     const file = formData.get("file") as File | null;
     const title = (formData.get("title") as string)?.trim() ?? "";
     const description = (formData.get("description") as string)?.trim() || null;
@@ -75,7 +87,10 @@ export async function POST(request: NextRequest) {
     let durationSeconds: number | null = null;
     try {
       const buffer = await file.arrayBuffer();
-      const metadata = await parseBuffer(new Uint8Array(buffer));
+      const metadata = await parseBuffer(
+        new Uint8Array(buffer),
+        file.type || undefined
+      );
       if (
         metadata.format.duration != null &&
         Number.isFinite(metadata.format.duration)

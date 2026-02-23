@@ -104,7 +104,7 @@ export default function TrackCard({
 
   // Grid variant
   return (
-    <div className="glass-card p-3 group animate-fade-in-up">
+    <div className="glass-card p-3 group animate-fade-in-up min-w-0">
       {/* Cover art placeholder */}
       <div
         className="relative aspect-square rounded-lg overflow-hidden mb-3"
@@ -171,6 +171,37 @@ export default function TrackCard({
           style={{ color: "var(--text-disabled)" }}>
           {formatDuration(track.duration)}
         </span>
+      </div>
+    </div>
+  );
+}
+
+export function TrackCardSkeleton({
+  variant = "grid",
+}: {
+  variant?: "grid" | "compact";
+}) {
+  if (variant === "compact") {
+    return (
+      <div className="flex items-center gap-3 p-3 rounded-lg bg-transparent">
+        <div className="w-12 h-12 rounded-lg shrink-0 skeleton" />
+        <div className="flex-1 min-w-0 flex flex-col gap-2">
+          <div className="h-3 w-3/4 rounded-full skeleton" />
+          <div className="h-2 w-1/2 rounded-full skeleton" />
+        </div>
+        <div className="w-8 h-2 rounded-full skeleton shrink-0" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass-card p-3">
+      <div className="aspect-square rounded-lg mb-3 skeleton" />
+      <div className="h-3 w-3/4 rounded-full mb-2 skeleton" />
+      <div className="h-2 w-1/2 rounded-full mb-3 skeleton" />
+      <div className="flex items-center gap-1.5">
+        <div className="w-3 h-3 rounded-full skeleton" />
+        <div className="w-8 h-2 rounded-full skeleton" />
       </div>
     </div>
   );

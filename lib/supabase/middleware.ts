@@ -21,9 +21,15 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user: { id: string } | null = null;
+  let authCheckFailed = false;
+  try {
+    const result = await supabase.auth.getUser();
+    user = result.data.user;
+    if (result.error) authCheckFailed = true;
+  } catch {
+    authCheckFailed = true;
+  }
 
   const pathname = request.nextUrl.pathname;
   const isDashboard = pathname.startsWith("/dashboard");
@@ -33,7 +39,7 @@ export async function updateSession(request: NextRequest) {
     pathname === "/forgot-password" ||
     pathname === "/reset-password";
 
-  if (isDashboard && !user) {
+  if (isDashboard && !user && !authCheckFailed) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("next", pathname);
     return NextResponse.redirect(loginUrl);

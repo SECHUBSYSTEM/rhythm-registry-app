@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .single();
 
     const creatorName =
-      (profile?.display_name as string | null) ?? "Unknown";
+      (profile?.display_name as string | null)?.trim() || "Creator";
     const track = mapDbTrackToTrack(row as DbTrackRow, creatorName);
 
     return NextResponse.json(track);
