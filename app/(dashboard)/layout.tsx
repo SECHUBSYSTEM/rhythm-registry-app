@@ -27,7 +27,7 @@ export default function DashboardLayout({
           {/* Main content */}
           <main
             style={{ minHeight: "100dvh" }}
-            className="pt-[var(--navbar-height)] pb-[calc(var(--player-height)+var(--mobile-nav-height))] md:pb-[var(--player-height)] md:pl-[var(--sidebar-width)] transition-[padding] overflow-x-hidden">
+            className="pt-(--navbar-height) pb-[calc(var(--player-height)+var(--mobile-nav-height))] md:pb-(--player-height) md:pl-(--sidebar-width) transition-[padding] overflow-x-hidden">
             <div className="w-full min-w-0 max-w-[1400px] mx-auto px-4 sm:px-5 md:px-6 lg:px-8">
               {children}
             </div>
