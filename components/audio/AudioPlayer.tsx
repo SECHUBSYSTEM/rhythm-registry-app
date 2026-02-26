@@ -15,7 +15,7 @@ import {
   Maximize2,
 } from "lucide-react";
 import { useAudioPlayer } from "@/components/providers/AudioPlayerProvider";
-import { formatDuration } from "@/lib/mock-data";
+import { formatDuration } from "@/lib/format";
 
 const IDLE_TIMEOUT = 3000; // 3 seconds before fading
 
@@ -96,7 +96,7 @@ export default function AudioPlayer() {
 
   return (
     <div
-      className="fixed left-0 right-0 z-50 bottom-[var(--mobile-nav-height)] md:bottom-0"
+      className="fixed left-0 right-0 z-50 bottom-(--mobile-nav-height) md:bottom-0"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onTouchStart={wakePlayer}

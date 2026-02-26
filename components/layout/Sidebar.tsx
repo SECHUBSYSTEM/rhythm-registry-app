@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import {
   Home,
   Library,
+  ClipboardList,
+  Briefcase,
   Upload,
-  Sparkles,
   ShieldCheck,
   Music2,
 } from "lucide-react";
@@ -27,16 +28,22 @@ const sidebarLinks: SidebarLink[] = [
     icon: <Library size={20} />,
   },
   {
+    href: "/dashboard/orders",
+    label: "My orders",
+    icon: <ClipboardList size={20} />,
+    roles: ["listener"],
+  },
+  {
+    href: "/dashboard/assignments",
+    label: "Assignments",
+    icon: <Briefcase size={20} />,
+    roles: ["creator", "admin"],
+  },
+  {
     href: "/dashboard/upload",
     label: "Upload",
     icon: <Upload size={20} />,
     roles: ["creator", "admin"],
-  },
-  {
-    href: "/dashboard/become-creator",
-    label: "Become a Creator",
-    icon: <Sparkles size={20} />,
-    roles: ["listener"],
   },
   {
     href: "/dashboard/admin",

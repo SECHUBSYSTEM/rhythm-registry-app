@@ -61,8 +61,11 @@ export default function LandingPage() {
           >
             Log in
           </Link>
-          <Link href="/signup" className="btn btn-primary btn-sm">
-            Sign up free
+          <Link href="/signup?role=listener" className="btn btn-outline btn-sm">
+            Be a listener
+          </Link>
+          <Link href="/signup?role=creator" className="btn btn-primary btn-sm">
+            Be a creator
           </Link>
         </div>
       </nav>
@@ -139,11 +142,15 @@ export default function LandingPage() {
             className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-12 animate-fade-in-up"
             style={{ animationDelay: "300ms" }}
           >
-            <Link href="/signup" className="btn btn-primary btn-lg">
+            <Link href="/signup?role=listener" className="btn btn-primary btn-lg">
               <Play size={18} fill="white" />
-              Start listening free
+              Be a Rhythm listener
             </Link>
-            <Link href="/login" className="btn btn-outline btn-lg">
+            <Link href="/signup?role=creator" className="btn btn-outline btn-lg">
+              <Mic2 size={18} />
+              Be a creator
+            </Link>
+            <Link href="/login" className="btn btn-ghost btn-lg">
               I have an account
               <ArrowRight size={16} />
             </Link>
@@ -240,10 +247,15 @@ export default function LandingPage() {
             Join Rhythm Registry and start exploring curated original audio
             today.
           </p>
-          <Link href="/signup" className="btn btn-primary btn-lg">
-            Get started
-            <ArrowRight size={18} />
-          </Link>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Link href="/signup?role=listener" className="btn btn-primary btn-lg">
+              Be a listener
+              <ArrowRight size={18} />
+            </Link>
+            <Link href="/signup?role=creator" className="btn btn-outline btn-lg">
+              Be a creator
+            </Link>
+          </div>
         </div>
       </section>
 

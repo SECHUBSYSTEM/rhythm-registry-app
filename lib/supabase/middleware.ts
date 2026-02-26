@@ -38,6 +38,7 @@ export async function updateSession(request: NextRequest) {
     pathname === "/signup" ||
     pathname === "/forgot-password" ||
     pathname === "/reset-password";
+  const isLanding = pathname === "/";
 
   if (isDashboard && !user && !authCheckFailed) {
     const loginUrl = new URL("/login", request.url);
@@ -45,7 +46,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (isAuthPage && user) {
+  if (user && (isAuthPage || isLanding)) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

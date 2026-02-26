@@ -1,25 +1,35 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, User, ArrowRight } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Mic2, Headphones } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
+import type { SignupRole } from "@/components/providers/AuthProvider";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { signup } = useAuth();
+  const roleFromUrl = useMemo(() => {
+    const r = searchParams.get("role");
+    return r === "creator" || r === "listener" ? r : null;
+  }, [searchParams]);
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [roleChoice, setRoleChoice] = useState<SignupRole>(roleFromUrl ?? "listener");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showEmailVerificationMessage, setShowEmailVerificationMessage] =
     useState(false);
   const [verificationEmail, setVerificationEmail] = useState("");
+
+  const effectiveRole: SignupRole = roleFromUrl ?? roleChoice;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +51,7 @@ export default function SignupPage() {
 
     setIsLoading(true);
     try {
-      const result = await signup(trimmedName, email, password);
+      const result = await signup(trimmedName, email, password, effectiveRole);
       if (result.needsEmailVerification) {
         setVerificationEmail(result.email ?? email);
         setShowEmailVerificationMessage(true);
@@ -108,8 +118,49 @@ export default function SignupPage() {
         Create your account
       </h1>
       <p className="text-sm mb-8" style={{ color: "var(--text-muted)" }}>
-        Start listening to original audio for free
+        {roleFromUrl === "creator"
+          ? "Apply to share your original audio as a creator"
+          : roleFromUrl === "listener"
+            ? "Start listening to original audio as a Rhythm listener"
+            : "Choose how you want to use Rhythm Registry"}
       </p>
+
+      {/* Role selection (when not in URL) */}
+      {roleFromUrl == null && (
+        <div className="mb-6">
+          <label
+            className="block text-sm font-medium mb-1.5"
+            style={{ color: "var(--text-secondary)" }}>
+            I want to be a
+          </label>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setRoleChoice("listener")}
+              className={`p-4 rounded-xl border-2 text-left transition-colors flex items-center gap-3 ${
+                roleChoice === "listener"
+                  ? "border-rose-primary bg-rose-secondary/20"
+                  : "border-border-subtle hover:border-border-default"
+              }`}
+              style={{ color: "var(--text-primary)" }}>
+              <Headphones size={24} style={{ color: "var(--rose-light)" }} />
+              <span className="font-medium">Rhythm listener</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setRoleChoice("creator")}
+              className={`p-4 rounded-xl border-2 text-left transition-colors flex items-center gap-3 ${
+                roleChoice === "creator"
+                  ? "border-rose-primary bg-rose-secondary/20"
+                  : "border-border-subtle hover:border-border-default"
+              }`}
+              style={{ color: "var(--text-primary)" }}>
+              <Mic2 size={24} style={{ color: "var(--rose-light)" }} />
+              <span className="font-medium">Creator (producer)</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Social buttons */}
       <div className="space-y-3 mb-6">

@@ -2,7 +2,7 @@
 
 import { Play, Pause, Download, Clock } from "lucide-react";
 import { useAudioPlayer } from "@/components/providers/AudioPlayerProvider";
-import { formatDuration } from "@/lib/mock-data";
+import { formatDuration } from "@/lib/format";
 import type { Track } from "@/types";
 
 interface TrackCardProps {

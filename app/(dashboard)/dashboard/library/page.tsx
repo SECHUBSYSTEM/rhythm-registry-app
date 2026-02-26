@@ -7,7 +7,7 @@ import { useAudioPlayer } from "@/components/providers/AudioPlayerProvider";
 import TrackList from "@/components/tracks/TrackList";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import api from "@/lib/api";
-import { formatFileSize } from "@/lib/mock-data";
+import { formatFileSize } from "@/lib/format";
 import type { Track } from "@/types";
 
 type Tab = "all" | "offline";

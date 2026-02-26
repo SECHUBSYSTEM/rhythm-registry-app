@@ -9,6 +9,8 @@ export interface Profile {
   avatarUrl?: string;
   role: UserRole;
   createdAt: string;
+  /** Set when listener has completed at least one payment */
+  listenerAccessGrantedAt?: string;
 }
 
 // ─── Track Types ────────────────────────────────────────────────────────────
@@ -88,4 +90,57 @@ export interface NavItem {
   icon: string;
   roles?: UserRole[]; // If undefined, visible to all roles
   badge?: string;
+}
+
+// ─── Listener Orders & Access ──────────────────────────────────────────────
+
+export const ORDER_STATUSES = [
+  "AWAITING_ASSIGNMENT",
+  "ASSIGNMENT_PENDING", // admin assigned; waiting for creator to accept/decline
+  "ASSIGNED",
+  "PLAYLIST_PENDING",
+  "PREFERENCES_SUBMITTED",
+  "PREVIEW_PLAYLIST_READY",
+  "REVISION_REQUESTED",
+  "PLAYLIST_APPROVED",
+  "FINAL_DELIVERED",
+  "PAYOUT_ELIGIBLE",
+] as const;
+
+export type OrderStatus = (typeof ORDER_STATUSES)[number];
+
+export interface OrderPreferences {
+  spotifyPlaylistUrl?: string;
+  mustPlay?: string;
+  doNotPlay?: string;
+  specialMoments?: string;
+  notes?: string;
+}
+
+export interface PreviewPlaylistItem {
+  title?: string;
+  id?: string;
+  uri?: string;
+}
+
+export interface ListenerOrder {
+  id: string;
+  userId: string;
+  stripeSessionId: string;
+  eventType: string;
+  eventDate: string;
+  durationHours: number;
+  vibeTags: string[] | null;
+  rush: boolean;
+  status: OrderStatus;
+  assignedCreatorId: string | null;
+  totalAmountCents: number;
+  rushFeeCents: number;
+  preferences?: OrderPreferences;
+  previewPlaylist?: PreviewPlaylistItem[];
+  revisionNotes?: string | null;
+  playlistSubmittedAt?: string | null;
+  finalTrackId?: string | null;
+  createdAt: string;
+  updatedAt: string;
 }

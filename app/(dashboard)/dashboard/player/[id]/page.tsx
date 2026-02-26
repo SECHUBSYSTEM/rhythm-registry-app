@@ -15,12 +15,12 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { useAudioPlayer } from "@/components/providers/AudioPlayerProvider";
-import { useOfflineTrack } from "@/components/providers/OfflineProvider";
 import Waveform from "@/components/audio/Waveform";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import api from "@/lib/api";
-import { formatDuration, formatFileSize } from "@/lib/mock-data";
+import { formatDuration, formatFileSize } from "@/lib/format";
 import type { Track } from "@/types";
+import { useOfflineTrack } from "@/components/providers/OfflineProvider";
 
 export default function PlayerPage({
   params,
@@ -77,7 +77,7 @@ export default function PlayerPage({
   if (error || !track) {
     return (
       <div className="max-w-2xl mx-auto flex flex-col items-center justify-center min-h-[40vh] gap-4">
-        <p className="text-[var(--text-muted)]">{error ?? "Track not found."}</p>
+        <p className="text-text-muted">{error ?? "Track not found."}</p>
         <Link href="/dashboard" className="btn btn-primary">
           Back to Dashboard
         </Link>

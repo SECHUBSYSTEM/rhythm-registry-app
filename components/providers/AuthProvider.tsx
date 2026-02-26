@@ -14,9 +14,12 @@ import { createClient } from "@/lib/supabase/client";
 
 // ── Context Types ─────────────────────────────────────────────────────────
 
+export type SignupRole = "creator" | "listener" | null;
+
 interface AuthContextType {
   user: Profile | null;
   role: UserRole;
+  signupRole: SignupRole;
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<void>;
@@ -24,6 +27,7 @@ interface AuthContextType {
     name: string,
     email: string,
     password: string,
+    signupRole?: SignupRole,
   ) => Promise<{
     needsEmailVerification: boolean;
     email?: string;
@@ -40,6 +44,7 @@ function mapRowToProfile(
     display_name: string | null;
     role: string;
     created_at: string;
+    listener_access_granted_at?: string | null;
   },
   email: string,
 ): Profile {
@@ -49,6 +54,7 @@ function mapRowToProfile(
     displayName: row.display_name ?? undefined,
     role: row.role as UserRole,
     createdAt: row.created_at,
+    listenerAccessGrantedAt: row.listener_access_granted_at ?? undefined,
   };
 }
 
@@ -67,6 +73,7 @@ function profileFromSession(session: { user: { id: string; email?: string | null
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Profile | null>(null);
+  const [signupRole, setSignupRole] = useState<SignupRole>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [roleOverride, setRoleOverride] = useState<UserRole | null>(null);
 
@@ -79,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ): Promise<{ profile: Profile | null; error: { code?: string } | null }> => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, display_name, role, created_at")
+        .select("id, display_name, role, created_at, listener_access_granted_at")
         .eq("id", userId)
         .single();
       if (error || !data) {
@@ -90,7 +97,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       return {
         profile: mapRowToProfile(
-          { ...data, display_name: data.display_name ?? null },
+          {
+            ...data,
+            display_name: data.display_name ?? null,
+            listener_access_granted_at: (data as { listener_access_granted_at?: string | null }).listener_access_granted_at ?? null,
+          },
           email,
         ),
         error: null,
@@ -116,13 +127,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } =     supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!session?.user) {
         setUser(null);
+        setSignupRole(null);
         setRoleOverride(null);
         setIsLoading(false);
         return;
       }
+      const metaRole = session.user.user_metadata?.signup_role as string | undefined;
+      setSignupRole(metaRole === "creator" || metaRole === "listener" ? metaRole : null);
       const { profile, error } = await fetchProfile(
         session.user.id,
         session.user.email ?? "",
@@ -148,6 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else if (isProfileGoneError(error)) {
         await supabase.auth.signOut();
         setUser(null);
+        setSignupRole(null);
         setRoleOverride(null);
         router.replace("/login");
       } else {
@@ -189,15 +204,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       name: string,
       email: string,
       password: string,
+      signupRoleArg?: SignupRole,
     ): Promise<{ needsEmailVerification: boolean; email?: string }> => {
       setIsLoading(true);
       const origin =
         typeof window !== "undefined" ? window.location.origin : undefined;
+      const meta: { display_name: string; signup_role?: "creator" | "listener" } = { display_name: name };
+      if (signupRoleArg === "creator" || signupRoleArg === "listener") meta.signup_role = signupRoleArg;
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { display_name: name },
+          data: meta,
           emailRedirectTo: origin ? `${origin}/auth/callback` : undefined,
         },
       });
@@ -252,6 +270,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       console.error("Logout error:", error);
     } finally {
       setUser(null);
+      setSignupRole(null);
       setRoleOverride(null);
       router.replace("/login");
     }
@@ -268,6 +287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         role: effectiveRole,
+        signupRole,
         isLoading,
         isAuthenticated: !!user,
         login,

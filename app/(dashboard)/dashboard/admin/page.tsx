@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   ShieldCheck,
   Check,
@@ -12,13 +12,22 @@ import {
   ExternalLink,
   Search,
   Filter,
+  ClipboardList,
+  Trash2,
+  UserPlus,
 } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import api from "@/lib/api";
-import type { CreatorApplication, ApplicationStatus } from "@/types";
+import type { CreatorApplication, ApplicationStatus, ListenerOrder } from "@/types";
 
 type TabFilter = "pending" | "approved" | "rejected" | "all";
+type AdminSection = "applications" | "orders" | "delete-track";
+
+interface CreatorOption {
+  id: string;
+  displayName: string;
+}
 
 function fetchApplications(): Promise<CreatorApplication[]> {
   return api
@@ -29,13 +38,31 @@ function fetchApplications(): Promise<CreatorApplication[]> {
 
 export default function AdminPage() {
   const { role } = useAuth();
+  const [section, setSection] = useState<AdminSection>("applications");
   const [activeTab, setActiveTab] = useState<TabFilter>("pending");
   const [applications, setApplications] = useState<CreatorApplication[]>([]);
+  const [orders, setOrders] = useState<ListenerOrder[]>([]);
+  const [creators, setCreators] = useState<CreatorOption[]>([]);
   const [loading, setLoading] = useState(true);
+  const [ordersLoading, setOrdersLoading] = useState(false);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [assigningOrderId, setAssigningOrderId] = useState<string | null>(null);
+  const [assignCreatorId, setAssignCreatorId] = useState<Record<string, string>>({});
+  const [deleteTrackId, setDeleteTrackId] = useState("");
+  const [deletingTrack, setDeletingTrack] = useState(false);
+  const [deleteTrackError, setDeleteTrackError] = useState("");
+
+  const fetchOrders = useCallback(() => {
+    setOrdersLoading(true);
+    api
+      .get<ListenerOrder[]>("/api/admin/orders")
+      .then((r) => setOrders(Array.isArray(r.data) ? r.data : []))
+      .catch(() => setOrders([]))
+      .finally(() => setOrdersLoading(false));
+  }, []);
 
   useEffect(() => {
     if (role !== "admin") {
@@ -48,6 +75,16 @@ export default function AdminPage() {
       .catch(() => setApplications([]))
       .finally(() => setLoading(false));
   }, [role]);
+
+  useEffect(() => {
+    if (role === "admin" && section === "orders") {
+      fetchOrders();
+      api
+        .get<CreatorOption[]>("/api/admin/creators")
+        .then((r) => setCreators(Array.isArray(r.data) ? r.data : []))
+        .catch(() => setCreators([]));
+    }
+  }, [role, section, fetchOrders]);
 
   // Access gate
   if (role !== "admin") {
@@ -70,13 +107,19 @@ export default function AdminPage() {
     );
   }
 
-  if (loading) {
+  if (loading && section === "applications") {
     return (
       <div className="flex items-center justify-center min-h-[40vh]">
         <LoadingSpinner size="lg" label="Loading applications..." />
       </div>
     );
   }
+
+  const sectionTabs: { value: AdminSection; label: string; icon: React.ReactNode }[] = [
+    { value: "applications", label: "Creator applications", icon: <ShieldCheck size={18} /> },
+    { value: "orders", label: "Orders", icon: <ClipboardList size={18} /> },
+    { value: "delete-track", label: "Delete track", icon: <Trash2 size={18} /> },
+  ];
 
   const filteredApps = applications.filter((app) => {
     const matchesTab = activeTab === "all" || app.status === activeTab;
@@ -150,12 +193,14 @@ export default function AdminPage() {
               Admin Panel
             </h1>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              Manage creator applications
+              {section === "applications" && "Manage creator applications"}
+              {section === "orders" && "Assign creators to orders"}
+              {section === "delete-track" && "Delete a track and its file"}
             </p>
           </div>
         </div>
 
-        {/* Search */}
+        {section === "applications" && (
         <div className="relative w-full sm:w-64">
           <Search
             size={14}
@@ -174,8 +219,197 @@ export default function AdminPage() {
             }}
           />
         </div>
+        )}
       </div>
 
+      {/* Section switcher */}
+      <div
+        className="flex gap-1 mb-6 p-1 rounded-xl overflow-x-auto"
+        style={{ background: "var(--bg-elevated)" }}>
+        {sectionTabs.map((tab) => (
+          <button
+            key={tab.value}
+            onClick={() => setSection(tab.value)}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap"
+            style={{
+              background: section === tab.value ? "var(--bg-highlight)" : "transparent",
+              color: section === tab.value ? "var(--text-primary)" : "var(--text-muted)",
+            }}>
+            {tab.icon}
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {section === "orders" && (
+        <>
+          {ordersLoading ? (
+            <div className="flex items-center justify-center min-h-[30vh]">
+              <LoadingSpinner size="lg" label="Loading orders..." />
+            </div>
+          ) : orders.length === 0 ? (
+            <p className="text-sm py-8" style={{ color: "var(--text-muted)" }}>
+              No orders yet.
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order) => (
+                <div
+                  key={order.id}
+                  className="rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center gap-4"
+                  style={{
+                    background: "var(--bg-elevated)",
+                    borderColor: "var(--border)",
+                  }}>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium truncate" style={{ color: "var(--text-primary)" }}>
+                      {order.eventType} — {order.eventDate}
+                    </p>
+                    <p className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+                      ID: {order.id.slice(0, 8)}…
+                      {order.assignedCreatorId
+                        ? order.status === "ASSIGNMENT_PENDING" || order.status === "ASSIGNED"
+                          ? ` · Pending (${order.assignedCreatorId.slice(0, 8)}…)`
+                          : ` · Accepted (${order.assignedCreatorId.slice(0, 8)}…)`
+                        : " · Unassigned"}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {order.status !== "ASSIGNMENT_PENDING" &&
+                    order.status !== "ASSIGNED" &&
+                    order.assignedCreatorId ? (
+                      <span className="text-xs font-medium" style={{ color: "var(--text-secondary)" }}>
+                        Creator working
+                      </span>
+                    ) : (
+                      <>
+                        <select
+                          value={assignCreatorId[order.id] ?? ""}
+                          onChange={(e) =>
+                            setAssignCreatorId((prev) => ({
+                              ...prev,
+                              [order.id]: e.target.value,
+                            }))
+                          }
+                          className="input text-sm"
+                          style={{
+                            background: "var(--bg-base)",
+                            color: "var(--text-primary)",
+                            borderColor: "var(--border)",
+                            minWidth: "140px",
+                          }}>
+                          <option value="">Select creator</option>
+                          {creators.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.displayName}
+                            </option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          disabled={!assignCreatorId[order.id] || assigningOrderId === order.id}
+                      onClick={async () => {
+                        const creatorId = assignCreatorId[order.id];
+                        if (!creatorId) return;
+                        setAssigningOrderId(order.id);
+                        try {
+                          await api.post(`/api/admin/orders/${order.id}/assign`, {
+                            creatorId,
+                          });
+                          fetchOrders();
+                          setAssignCreatorId((prev) => {
+                            const next = { ...prev };
+                            delete next[order.id];
+                            return next;
+                          });
+                        } finally {
+                          setAssigningOrderId(null);
+                        }
+                      }}
+                      className="btn btn-sm inline-flex items-center gap-1">
+                      {assigningOrderId === order.id ? (
+                        <LoadingSpinner size="sm" />
+                      ) : (
+                        <>
+                          <UserPlus size={14} />
+                          {order.assignedCreatorId && (order.status === "ASSIGNMENT_PENDING" || order.status === "ASSIGNED") ? "Reassign" : "Assign"}
+                        </>
+                      )}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {section === "delete-track" && (
+        <div
+          className="rounded-xl border p-6 max-w-md"
+          style={{
+            background: "var(--bg-elevated)",
+            borderColor: "var(--border)",
+          }}>
+          <p className="text-sm mb-4" style={{ color: "var(--text-secondary)" }}>
+            Permanently delete a track and its audio file. Enter the track ID (UUID).
+          </p>
+          <input
+            type="text"
+            value={deleteTrackId}
+            onChange={(e) => {
+              setDeleteTrackId(e.target.value);
+              setDeleteTrackError("");
+            }}
+            placeholder="Track ID (e.g. from library URL)"
+            className="input w-full mb-3"
+            style={{
+              background: "var(--bg-base)",
+              color: "var(--text-primary)",
+              borderColor: "var(--border)",
+            }}
+          />
+          {deleteTrackError && (
+            <p className="text-sm mb-2" style={{ color: "var(--rose-primary)" }}>
+              {deleteTrackError}
+            </p>
+          )}
+          <button
+            type="button"
+            disabled={!deleteTrackId.trim() || deletingTrack}
+            onClick={async () => {
+              const id = deleteTrackId.trim();
+              if (!id) return;
+              setDeletingTrack(true);
+              setDeleteTrackError("");
+              try {
+                await api.delete(`/api/admin/tracks/${id}`);
+                setDeleteTrackId("");
+              } catch (err: unknown) {
+                const res =
+                  err && typeof err === "object" && "response" in err
+                    ? (err as { response?: { data?: { error?: string } } }).response
+                    : null;
+                setDeleteTrackError(res?.data?.error ?? "Failed to delete track.");
+              } finally {
+                setDeletingTrack(false);
+              }
+            }}
+            className="btn border"
+            style={{
+              borderColor: "var(--rose-primary)",
+              color: "var(--rose-primary)",
+            }}>
+            {deletingTrack ? <LoadingSpinner size="sm" /> : <Trash2 size={16} />}
+            Delete track
+          </button>
+        </div>
+      )}
+
+      {section === "applications" && (
+      <>
       {/* Tabs */}
       <div
         className="flex gap-1 mb-6 p-1 rounded-xl overflow-x-auto hide-scrollbar"
@@ -396,6 +630,8 @@ export default function AdminPage() {
             </div>
           ))}
         </div>
+      )}
+      </>
       )}
     </div>
   );

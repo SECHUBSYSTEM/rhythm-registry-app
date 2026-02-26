@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, Library, Upload, ShieldCheck } from "lucide-react";
+import { Home, Search, Library, ClipboardList, Upload, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/components/providers/AuthProvider";
 
 interface BottomNavItem {
@@ -16,6 +16,12 @@ const navItems: BottomNavItem[] = [
   { href: "/dashboard", label: "Home", icon: <Home size={22} /> },
   { href: "/dashboard/search", label: "Search", icon: <Search size={22} /> },
   { href: "/dashboard/library", label: "Library", icon: <Library size={22} /> },
+  {
+    href: "/dashboard/orders",
+    label: "Orders",
+    icon: <ClipboardList size={22} />,
+    roles: ["listener"],
+  },
   {
     href: "/dashboard/upload",
     label: "Upload",

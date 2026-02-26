@@ -30,6 +30,45 @@ export default function BecomeCreatorPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [errors, setErrors] = useState<{
+    bio?: string;
+    soundcloud?: string;
+    youtube?: string;
+    other?: string;
+  }>({});
+
+  const isValidUrl = (value: string): boolean => {
+    const v = value.trim();
+    if (!v) return true;
+    try {
+      const u = new URL(v);
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
+
+  const validate = (): boolean => {
+    const next: typeof errors = {};
+    const bioTrimmed = bio.trim();
+    if (!bioTrimmed) {
+      next.bio = "Please tell us why you want to be a creator.";
+    } else if (bioTrimmed.length < 20) {
+      next.bio = "Please write at least a short paragraph (20+ characters).";
+    }
+    if (links.soundcloud.trim() && !isValidUrl(links.soundcloud)) {
+      next.soundcloud = "Please enter a valid URL (e.g. https://soundcloud.com/...)";
+    }
+    if (links.youtube.trim() && !isValidUrl(links.youtube)) {
+      next.youtube = "Please enter a valid URL (e.g. https://youtube.com/...)";
+    }
+    if (links.other.trim() && !isValidUrl(links.other)) {
+      next.other = "Please enter a valid URL (e.g. https://...)";
+    }
+    setErrors(next);
+    setSubmitError("");
+    return Object.keys(next).length === 0;
+  };
 
   useEffect(() => {
     api
@@ -49,6 +88,7 @@ export default function BecomeCreatorPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
     setSubmitError("");
     setIsSubmitting(true);
     try {
@@ -181,7 +221,7 @@ export default function BecomeCreatorPage() {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} noValidate className="space-y-6">
         {/* Bio */}
         <div>
           <label
@@ -195,9 +235,21 @@ export default function BecomeCreatorPage() {
             rows={4}
             placeholder="Tell us about yourself and the kind of content you create…"
             value={bio}
-            onChange={(e) => setBio(e.target.value)}
-            required
+            onChange={(e) => {
+              setBio(e.target.value);
+              if (errors.bio) setErrors((prev) => ({ ...prev, bio: undefined }));
+            }}
+            aria-invalid={!!errors.bio}
+            aria-describedby={errors.bio ? "bio-error" : undefined}
+            style={{
+              borderColor: errors.bio ? "var(--error)" : undefined,
+            }}
           />
+          {errors.bio && (
+            <p id="bio-error" className="text-sm mt-1" style={{ color: "var(--error)" }}>
+              {errors.bio}
+            </p>
+          )}
         </div>
 
         {/* Content type */}
@@ -252,14 +304,25 @@ export default function BecomeCreatorPage() {
                 style={{ color: "var(--text-muted)" }}
               />
               <input
-                type="url"
+                type="text"
+                inputMode="url"
+                autoComplete="url"
                 className="input pl-11"
-                placeholder="SoundCloud URL"
+                placeholder="https://soundcloud.com/..."
                 value={links.soundcloud}
-                onChange={(e) =>
-                  setLinks((prev) => ({ ...prev, soundcloud: e.target.value }))
-                }
+                onChange={(e) => {
+                  setLinks((prev) => ({ ...prev, soundcloud: e.target.value }));
+                  if (errors.soundcloud) setErrors((prev) => ({ ...prev, soundcloud: undefined }));
+                }}
+                aria-invalid={!!errors.soundcloud}
+                aria-describedby={errors.soundcloud ? "soundcloud-error" : undefined}
+                style={{ borderColor: errors.soundcloud ? "var(--error)" : undefined }}
               />
+              {errors.soundcloud && (
+                <p id="soundcloud-error" className="text-sm mt-1" style={{ color: "var(--error)" }}>
+                  {errors.soundcloud}
+                </p>
+              )}
             </div>
             <div className="relative">
               <LinkIcon
@@ -268,14 +331,25 @@ export default function BecomeCreatorPage() {
                 style={{ color: "var(--text-muted)" }}
               />
               <input
-                type="url"
+                type="text"
+                inputMode="url"
+                autoComplete="url"
                 className="input pl-11"
-                placeholder="YouTube URL"
+                placeholder="https://youtube.com/..."
                 value={links.youtube}
-                onChange={(e) =>
-                  setLinks((prev) => ({ ...prev, youtube: e.target.value }))
-                }
+                onChange={(e) => {
+                  setLinks((prev) => ({ ...prev, youtube: e.target.value }));
+                  if (errors.youtube) setErrors((prev) => ({ ...prev, youtube: undefined }));
+                }}
+                aria-invalid={!!errors.youtube}
+                aria-describedby={errors.youtube ? "youtube-error" : undefined}
+                style={{ borderColor: errors.youtube ? "var(--error)" : undefined }}
               />
+              {errors.youtube && (
+                <p id="youtube-error" className="text-sm mt-1" style={{ color: "var(--error)" }}>
+                  {errors.youtube}
+                </p>
+              )}
             </div>
             <div className="relative">
               <LinkIcon
@@ -284,33 +358,44 @@ export default function BecomeCreatorPage() {
                 style={{ color: "var(--text-muted)" }}
               />
               <input
-                type="url"
+                type="text"
+                inputMode="url"
+                autoComplete="url"
                 className="input pl-11"
-                placeholder="Other (website, social media)"
+                placeholder="https://..."
                 value={links.other}
-                onChange={(e) =>
-                  setLinks((prev) => ({ ...prev, other: e.target.value }))
-                }
+                onChange={(e) => {
+                  setLinks((prev) => ({ ...prev, other: e.target.value }));
+                  if (errors.other) setErrors((prev) => ({ ...prev, other: undefined }));
+                }}
+                aria-invalid={!!errors.other}
+                aria-describedby={errors.other ? "other-error" : undefined}
+                style={{ borderColor: errors.other ? "var(--error)" : undefined }}
               />
+              {errors.other && (
+                <p id="other-error" className="text-sm mt-1" style={{ color: "var(--error)" }}>
+                  {errors.other}
+                </p>
+              )}
             </div>
           </div>
         </div>
 
         {/* Submit */}
         {submitError && (
-          <p className="text-sm" style={{ color: "var(--error)" }}>
+          <p className="text-sm" style={{ color: "var(--error)" }} role="alert">
             {submitError}
           </p>
         )}
         <button
           type="submit"
-          className="btn btn-primary btn-lg w-full"
+          className="btn btn-primary btn-lg w-full inline-flex items-center justify-center gap-2"
           disabled={isSubmitting || !bio.trim()}
           style={{
             opacity: isSubmitting || !bio.trim() ? 0.6 : 1,
           }}>
           {isSubmitting ? (
-            <span className="animate-spin inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+            <LoadingSpinner size="sm" />
           ) : (
             <>
               <Send size={16} />
