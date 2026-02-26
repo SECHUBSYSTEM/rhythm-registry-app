@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     if (signupRole !== "listener") {
       return NextResponse.json(
         { error: "Checkout is only for listeners" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -33,18 +33,12 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Invalid form data", details: parsed.error.flatten() },
-        { status: 422 }
+        { status: 422 },
       );
     }
 
-    const {
-      eventType,
-      eventDate,
-      durationHours,
-      vibeTags,
-      rush,
-      email,
-    } = parsed.data;
+    const { eventType, eventDate, durationHours, vibeTags, rush, email } =
+      parsed.data;
 
     const {
       totalAmountCents,
@@ -99,7 +93,7 @@ export async function POST(request: NextRequest) {
     if (!session.url) {
       return NextResponse.json(
         { error: "Failed to create checkout session" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -108,7 +102,7 @@ export async function POST(request: NextRequest) {
     console.error("[api/checkout]", err);
     return NextResponse.json(
       { error: err instanceof Error ? err.message : "Checkout failed" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

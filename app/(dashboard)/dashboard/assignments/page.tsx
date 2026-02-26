@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Music, Calendar, ChevronRight, Briefcase } from "lucide-react";
+import { ChevronRight, Briefcase } from "lucide-react";
 import api from "@/lib/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import type { ListenerOrder } from "@/types";
@@ -38,7 +38,10 @@ export default function AssignmentsPage() {
     <div className="py-8 animate-fade-in-up">
       <h1
         className="text-2xl font-bold mb-6"
-        style={{ fontFamily: "var(--font-outfit)", color: "var(--text-primary)" }}>
+        style={{
+          fontFamily: "var(--font-outfit)",
+          color: "var(--text-primary)",
+        }}>
         My assignments
       </h1>
 
@@ -71,7 +74,9 @@ export default function AssignmentsPage() {
                       style={{ color: "var(--text-primary)" }}>
                       {order.eventType} — {order.eventDate}
                     </p>
-                    <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+                    <p
+                      className="text-sm mt-1"
+                      style={{ color: "var(--text-muted)" }}>
                       {order.durationHours}h
                     </p>
                     <span

@@ -9,7 +9,6 @@ import {
   XCircle,
   Send,
   Upload,
-  Music,
   DollarSign,
 } from "lucide-react";
 import api from "@/lib/api";
@@ -34,7 +33,6 @@ export default function AssignmentDetailPage() {
   const [accepting, setAccepting] = useState(false);
   const [declining, setDeclining] = useState(false);
   const [playlist, setPlaylist] = useState<PreviewPlaylistItem[]>([]);
-  const [playlistTitle, setPlaylistTitle] = useState("");
   const [submittingPlaylist, setSubmittingPlaylist] = useState(false);
   const [uploadingMix, setUploadingMix] = useState(false);
   const [mixTitle, setMixTitle] = useState("");

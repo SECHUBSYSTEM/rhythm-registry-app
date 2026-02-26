@@ -101,7 +101,7 @@ export default function OrderDetailPage() {
               status: "PREFERENCES_SUBMITTED",
               preferences: trimmed,
             }
-          : null
+          : null,
       );
     } catch (err: unknown) {
       const res =
@@ -124,7 +124,7 @@ export default function OrderDetailPage() {
         revisionNotes: revisionNotes.trim(),
       });
       setOrder((prev) =>
-        prev ? { ...prev, status: "REVISION_REQUESTED" } : null
+        prev ? { ...prev, status: "REVISION_REQUESTED" } : null,
       );
       setRevisionNotes("");
     } catch (err: unknown) {
@@ -145,7 +145,7 @@ export default function OrderDetailPage() {
     try {
       await api.post(`/api/listener/orders/${orderId}/approve-playlist`);
       setOrder((prev) =>
-        prev ? { ...prev, status: "PLAYLIST_APPROVED" } : null
+        prev ? { ...prev, status: "PLAYLIST_APPROVED" } : null,
       );
     } catch (err: unknown) {
       const res =
@@ -269,17 +269,26 @@ export default function OrderDetailPage() {
             style={{ color: "var(--text-primary)" }}>
             <Edit3 size={18} /> Playlist preferences
           </h2>
-          <form onSubmit={handleSubmitPreferences} noValidate className="space-y-4">
+          <form
+            onSubmit={handleSubmitPreferences}
+            noValidate
+            className="space-y-4">
             <div>
-              <label className="block text-sm mb-1" style={{ color: "var(--text-secondary)" }}>
-                Spotify playlist URL <span style={{ color: "var(--rose-primary)" }}>*</span>
+              <label
+                className="block text-sm mb-1"
+                style={{ color: "var(--text-secondary)" }}>
+                Spotify playlist URL{" "}
+                <span style={{ color: "var(--rose-primary)" }}>*</span>
               </label>
               <input
                 type="url"
                 required
                 value={prefs.spotifyPlaylistUrl}
                 onChange={(e) =>
-                  setPrefs((p) => ({ ...p, spotifyPlaylistUrl: e.target.value }))
+                  setPrefs((p) => ({
+                    ...p,
+                    spotifyPlaylistUrl: e.target.value,
+                  }))
                 }
                 className="input w-full"
                 style={{
@@ -291,7 +300,9 @@ export default function OrderDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-sm mb-1" style={{ color: "var(--text-secondary)" }}>
+              <label
+                className="block text-sm mb-1"
+                style={{ color: "var(--text-secondary)" }}>
                 Must play (optional)
               </label>
               <textarea
@@ -309,7 +320,9 @@ export default function OrderDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-sm mb-1" style={{ color: "var(--text-secondary)" }}>
+              <label
+                className="block text-sm mb-1"
+                style={{ color: "var(--text-secondary)" }}>
                 Do not play (optional)
               </label>
               <textarea
@@ -327,7 +340,9 @@ export default function OrderDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-sm mb-1" style={{ color: "var(--text-secondary)" }}>
+              <label
+                className="block text-sm mb-1"
+                style={{ color: "var(--text-secondary)" }}>
                 Special moments (optional)
               </label>
               <textarea
@@ -345,7 +360,9 @@ export default function OrderDetailPage() {
               />
             </div>
             <div>
-              <label className="block text-sm mb-1" style={{ color: "var(--text-secondary)" }}>
+              <label
+                className="block text-sm mb-1"
+                style={{ color: "var(--text-secondary)" }}>
                 Notes (optional)
               </label>
               <textarea
@@ -366,7 +383,11 @@ export default function OrderDetailPage() {
               type="submit"
               disabled={submittingPrefs || !prefs.spotifyPlaylistUrl.trim()}
               className="btn btn-secondary inline-flex items-center gap-2">
-              {submittingPrefs ? <LoadingSpinner size="sm" /> : <Send size={16} />}
+              {submittingPrefs ? (
+                <LoadingSpinner size="sm" />
+              ) : (
+                <Send size={16} />
+              )}
               Save preferences
             </button>
           </form>
@@ -385,7 +406,9 @@ export default function OrderDetailPage() {
             style={{ color: "var(--text-primary)" }}>
             <Music size={18} /> Preview playlist
           </h2>
-          <ul className="list-decimal list-inside space-y-1 mb-6 text-sm" style={{ color: "var(--text-secondary)" }}>
+          <ul
+            className="list-decimal list-inside space-y-1 mb-6 text-sm"
+            style={{ color: "var(--text-secondary)" }}>
             {order.previewPlaylist?.map((item, i) => (
               <li key={i}>{item.title ?? item.uri ?? `Track ${i + 1}`}</li>
             ))}
@@ -396,12 +419,21 @@ export default function OrderDetailPage() {
               onClick={handleApprove}
               disabled={approving}
               className="btn btn-primary inline-flex items-center gap-2">
-              {approving ? <LoadingSpinner size="sm" /> : <CheckCircle2 size={16} />}
+              {approving ? (
+                <LoadingSpinner size="sm" />
+              ) : (
+                <CheckCircle2 size={16} />
+              )}
               Approve playlist
             </button>
           </div>
-          <form onSubmit={handleSubmitRevision} className="mt-6 pt-6 border-t" style={{ borderColor: "var(--border)" }}>
-            <label className="block text-sm font-medium mb-2" style={{ color: "var(--text-secondary)" }}>
+          <form
+            onSubmit={handleSubmitRevision}
+            className="mt-6 pt-6 border-t"
+            style={{ borderColor: "var(--border)" }}>
+            <label
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--text-secondary)" }}>
               Request revision
             </label>
             <textarea
@@ -420,8 +452,15 @@ export default function OrderDetailPage() {
               type="submit"
               disabled={submittingRevision || !revisionNotes.trim()}
               className="btn border inline-flex items-center gap-2"
-              style={{ borderColor: "var(--border)", color: "var(--text-primary)" }}>
-              {submittingRevision ? <LoadingSpinner size="sm" /> : <Send size={16} />}
+              style={{
+                borderColor: "var(--border)",
+                color: "var(--text-primary)",
+              }}>
+              {submittingRevision ? (
+                <LoadingSpinner size="sm" />
+              ) : (
+                <Send size={16} />
+              )}
               Send revision request
             </button>
           </form>
@@ -430,15 +469,20 @@ export default function OrderDetailPage() {
 
       {canApproveOrRevision && !showPreviewSection && (
         <p className="text-sm mb-6" style={{ color: "var(--text-muted)" }}>
-          Your creator is preparing a preview playlist. You’ll see it here when it’s ready.
+          Your creator is preparing a preview playlist. You’ll see it here when
+          it’s ready.
         </p>
       )}
 
-      {["PLAYLIST_APPROVED", "FINAL_DELIVERED", "PAYOUT_ELIGIBLE"].includes(order.status) && !hasFinalMix && (
-        <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-          Your creator is preparing your final mix. It will appear in Your Library when ready.
-        </p>
-      )}
+      {["PLAYLIST_APPROVED", "FINAL_DELIVERED", "PAYOUT_ELIGIBLE"].includes(
+        order.status,
+      ) &&
+        !hasFinalMix && (
+          <p className="text-sm" style={{ color: "var(--text-muted)" }}>
+            Your creator is preparing your final mix. It will appear in Your
+            Library when ready.
+          </p>
+        )}
 
       {hasFinalMix && order.finalTrackId && (
         <div
@@ -447,7 +491,9 @@ export default function OrderDetailPage() {
             background: "var(--bg-elevated)",
             borderColor: "var(--border)",
           }}>
-          <h2 className="text-lg font-semibold mb-2" style={{ color: "var(--text-primary)" }}>
+          <h2
+            className="text-lg font-semibold mb-2"
+            style={{ color: "var(--text-primary)" }}>
             Your mix is ready
           </h2>
           <Link

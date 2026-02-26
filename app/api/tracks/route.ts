@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const auth = await requireAuth(supabase);
     if ("error" in auth) return auth.error;
 
-    const { user, profile } = auth;
+    const { user } = auth;
     const userId = user.id;
     
 

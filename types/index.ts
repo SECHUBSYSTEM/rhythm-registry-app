@@ -1,6 +1,6 @@
 // ─── User & Auth Types ─────────────────────────────────────────────────────
 
-export type UserRole = 'admin' | 'creator' | 'listener';
+export type UserRole = "admin" | "creator" | "listener";
 
 export interface Profile {
   id: string;
@@ -22,15 +22,15 @@ export interface Track {
   creatorId: string;
   creatorName: string;
   coverUrl?: string;
-  duration: number;       // seconds
-  fileSize: number;       // bytes
-  createdAt: string;      // ISO date
+  duration: number; // seconds
+  fileSize: number; // bytes
+  createdAt: string; // ISO date
   isOfflineAvailable?: boolean;
 }
 
 // ─── Creator Application Types ──────────────────────────────────────────────
 
-export type ApplicationStatus = 'pending' | 'approved' | 'rejected';
+export type ApplicationStatus = "pending" | "approved" | "rejected";
 
 export interface CreatorApplication {
   id: string;
@@ -38,7 +38,7 @@ export interface CreatorApplication {
   userName: string;
   userEmail: string;
   bio: string;
-  contentType: 'music' | 'podcast' | 'both';
+  contentType: "music" | "podcast" | "both";
   links?: {
     soundcloud?: string;
     youtube?: string;
@@ -46,8 +46,8 @@ export interface CreatorApplication {
   };
   status: ApplicationStatus;
   rejectionReason?: string;
-  submittedAt: string;    // ISO date
-  reviewedAt?: string;    // ISO date
+  submittedAt: string; // ISO date
+  reviewedAt?: string; // ISO date
 }
 
 // ─── Audio Player Types ─────────────────────────────────────────────────────
@@ -55,12 +55,12 @@ export interface CreatorApplication {
 export interface AudioPlayerState {
   currentTrack: Track | null;
   isPlaying: boolean;
-  progress: number;       // 0–100
-  currentTime: number;    // seconds
-  volume: number;         // 0–1
+  progress: number; // 0–100
+  currentTime: number; // seconds
+  volume: number; // 0–1
   isMuted: boolean;
   isShuffled: boolean;
-  repeatMode: 'off' | 'all' | 'one';
+  repeatMode: "off" | "all" | "one";
 }
 
 // ─── Upload Types ───────────────────────────────────────────────────────────
@@ -69,8 +69,8 @@ export interface UploadState {
   file: File | null;
   title: string;
   description: string;
-  progress: number;       // 0–100
-  status: 'idle' | 'uploading' | 'processing' | 'complete' | 'error';
+  progress: number; // 0–100
+  status: "idle" | "uploading" | "processing" | "complete" | "error";
   error?: string;
 }
 

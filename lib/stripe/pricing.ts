@@ -1,5 +1,5 @@
 /**
- * Single source for checkout pricing. 
+ * Single source for checkout pricing.
  *
  * Base prices are per booking (not per hour) and tiered by duration:
  *  - 2 hours →  $380
@@ -49,7 +49,7 @@ export interface CheckoutAmount {
  */
 export function calculateCheckoutAmount(
   durationHours: number,
-  rush: boolean
+  rush: boolean,
 ): CheckoutAmount {
   const baseAmountCents =
     BASE_PRICES_CENTS[durationHours] ?? BASE_PRICES_CENTS[2];

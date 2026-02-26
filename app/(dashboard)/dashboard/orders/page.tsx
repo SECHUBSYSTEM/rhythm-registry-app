@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Music, Calendar, ChevronRight } from "lucide-react";
+import { Music, ChevronRight } from "lucide-react";
 import api from "@/lib/api";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import type { ListenerOrder } from "@/types";
@@ -19,7 +19,10 @@ function formatCents(cents: number): string {
 }
 
 function statusLabel(status: string): string {
-  return status.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  return status
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export default function OrdersPage() {
@@ -53,7 +56,7 @@ export default function OrdersPage() {
       attempts++;
       try {
         const { data } = await api.get<{ order: ListenerOrder | null }>(
-          `/api/listener/orders/by-session?session_id=${encodeURIComponent(sessionId)}`
+          `/api/listener/orders/by-session?session_id=${encodeURIComponent(sessionId)}`,
         );
         if (data?.order) {
           setPolling(false);
@@ -77,7 +80,7 @@ export default function OrdersPage() {
       <div className="flex flex-col items-center justify-center min-h-[50vh] gap-4">
         <LoadingSpinner size="lg" label="Confirming your order..." />
         <p className="text-sm" style={{ color: "var(--text-muted)" }}>
-        Please wait while we confirm your order...
+          Please wait while we confirm your order...
         </p>
       </div>
     );
@@ -95,7 +98,10 @@ export default function OrdersPage() {
     <div className="py-8 animate-fade-in-up">
       <h1
         className="text-2xl font-bold mb-6"
-        style={{ fontFamily: "var(--font-outfit)", color: "var(--text-primary)" }}>
+        style={{
+          fontFamily: "var(--font-outfit)",
+          color: "var(--text-primary)",
+        }}>
         My orders
       </h1>
 
@@ -109,9 +115,7 @@ export default function OrdersPage() {
           }}>
           <Music className="w-12 h-12 mx-auto mb-4 opacity-60" />
           <p className="mb-4">No orders yet.</p>
-          <Link
-            href="/dashboard/onboarding"
-            className="btn btn-primary">
+          <Link href="/dashboard/onboarding" className="btn btn-primary">
             Get your custom mix
           </Link>
         </div>
@@ -133,9 +137,10 @@ export default function OrdersPage() {
                       style={{ color: "var(--text-primary)" }}>
                       {order.eventType} — {order.eventDate}
                     </p>
-                    <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-                      {order.durationHours}h
-                      {order.rush ? " · Rush" : ""}
+                    <p
+                      className="text-sm mt-1"
+                      style={{ color: "var(--text-muted)" }}>
+                      {order.durationHours}h{order.rush ? " · Rush" : ""}
                       {" · "}
                       {formatCents(order.totalAmountCents)}
                     </p>

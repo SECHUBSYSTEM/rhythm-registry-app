@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, User, ArrowRight, Mic2, Headphones } from "lucide-react";
@@ -8,7 +8,8 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import type { SignupRole } from "@/components/providers/AuthProvider";
 import { createClient } from "@/lib/supabase/client";
 
-export default function SignupPage() {
+// Inner component that uses useSearchParams, to be wrapped in Suspense
+function SignupContentWithParams() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { signup } = useAuth();
@@ -367,5 +368,13 @@ export default function SignupPage() {
         </Link>
       </p>
     </div>
+  );
+}
+
+export default function SignupContent() {
+  return (
+    <Suspense fallback={<div className="animate-fade-in-up">Loading...</div>}>
+      <SignupContentWithParams />
+    </Suspense>
   );
 }

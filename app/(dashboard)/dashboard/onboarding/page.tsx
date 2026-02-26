@@ -46,7 +46,7 @@ export default function OnboardingPage() {
 
   const toggleVibe = (vibe: string) => {
     setVibeTags((prev) =>
-      prev.includes(vibe) ? prev.filter((v) => v !== vibe) : [...prev, vibe]
+      prev.includes(vibe) ? prev.filter((v) => v !== vibe) : [...prev, vibe],
     );
   };
 
@@ -91,20 +91,18 @@ export default function OnboardingPage() {
       }
       setError("Could not start checkout.");
     } catch (err: unknown) {
-      const res = err && typeof err === "object" && "response" in err
-        ? (err as { response?: { data?: { error?: string } } }).response
-        : null;
+      const res =
+        err && typeof err === "object" && "response" in err
+          ? (err as { response?: { data?: { error?: string } } }).response
+          : null;
       setError(res?.data?.error ?? "Checkout failed. Try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const {
-    totalAmountCents,
-    rushFeeCents,
-    baseAmountCents,
-  } = calculateCheckoutAmount(durationHours, rush);
+  const { totalAmountCents, rushFeeCents, baseAmountCents } =
+    calculateCheckoutAmount(durationHours, rush);
 
   const formatDollars = (cents: number) =>
     new Intl.NumberFormat("en-US", {
@@ -118,7 +116,10 @@ export default function OnboardingPage() {
     <div className="max-w-lg mx-auto py-8 md:py-12 animate-fade-in-up">
       <h1
         className="text-2xl md:text-3xl font-bold mb-2"
-        style={{ fontFamily: "var(--font-outfit)", color: "var(--text-primary)" }}>
+        style={{
+          fontFamily: "var(--font-outfit)",
+          color: "var(--text-primary)",
+        }}>
         Get your custom mix
       </h1>
       <p className="text-sm mb-8" style={{ color: "var(--text-muted)" }}>
@@ -189,10 +190,7 @@ export default function OnboardingPage() {
             Duration (hours)
           </label>
           <div className="flex items-center gap-2">
-            <Clock
-              className="w-4 h-4"
-              style={{ color: "var(--text-muted)" }}
-            />
+            <Clock className="w-4 h-4" style={{ color: "var(--text-muted)" }} />
             <select
               value={durationHours}
               onChange={(e) => setDurationHours(Number(e.target.value))}
@@ -252,17 +250,20 @@ export default function OnboardingPage() {
               style={{
                 background: rush ? "var(--rose-primary)" : "var(--bg-elevated)",
                 borderColor: "var(--border)",
-              }}
-            >
+              }}>
               <span
                 className="inline-block h-4 w-4 rounded-full bg-white shadow transition-transform"
                 style={{
-                  transform: rush ? "translateX(1.25rem)" : "translateX(0.1rem)",
+                  transform: rush
+                    ? "translateX(1.25rem)"
+                    : "translateX(0.1rem)",
                 }}
               />
             </button>
 
-            <span className="text-sm" style={{ color: "var(--text-secondary)" }}>
+            <span
+              className="text-sm"
+              style={{ color: "var(--text-secondary)" }}>
               <Zap className="inline w-4 h-4 mr-1" />
               Rush delivery{" "}
               <span className="text-xs opacity-75">
@@ -277,8 +278,7 @@ export default function OnboardingPage() {
           style={{
             background: "var(--bg-elevated)",
             borderColor: "var(--border)",
-          }}
-        >
+          }}>
           <div className="flex items-center justify-between">
             <span style={{ color: "var(--text-secondary)" }}>
               {durationHours}-hour custom mix
@@ -292,17 +292,13 @@ export default function OnboardingPage() {
             <span
               style={{
                 color: rush ? "var(--text-primary)" : "var(--text-muted)",
-              }}
-            >
-              {rush
-                ? formatDollars(rushFeeCents)
-                : formatDollars(0)}
+              }}>
+              {rush ? formatDollars(rushFeeCents) : formatDollars(0)}
             </span>
           </div>
           <div
             className="mt-2 border-t pt-2 flex items-center justify-between font-semibold"
-            style={{ borderColor: "var(--border)" }}
-          >
+            style={{ borderColor: "var(--border)" }}>
             <span style={{ color: "var(--text-secondary)" }}>Total</span>
             <span style={{ color: "var(--text-primary)" }}>
               {formatDollars(totalAmountCents)}
@@ -372,11 +368,7 @@ export default function OnboardingPage() {
           type="submit"
           disabled={isSubmitting}
           className="btn btn-secondary btn-lg w-full inline-flex items-center justify-center gap-2">
-          {isSubmitting ? (
-            <LoadingSpinner size="sm" />
-          ) : (
-            "Continue to payment"
-          )}
+          {isSubmitting ? <LoadingSpinner size="sm" /> : "Continue to payment"}
         </button>
       </form>
     </div>
